@@ -10,10 +10,11 @@ pipeline {
   environment {
     GOLINT = tool 'golangci-lint'
     SONAR  = tool 'sonarqube-scanner'
+    GIT_URL = 'https://github.com/hieulw/go-webapp-sample.git'
     APP_NAME = 'go-webapp-sample'
     RELEASE = '1.5.7'
     DOCKER_USER = 'ladyga14'
-    DOCKER_PASS = credentials('dockerhub-token')
+    DOCKER_PASS = 'dockerhub-token'
     IMAGE_NAME = "${env.DOCKER_USER}/${env.APP_NAME}"
     IMAGE_TAG = "${env.RELEASE}-${BUILD_ID}"
   }
@@ -21,21 +22,21 @@ pipeline {
   stages {
     stage('Git Checkout') {
       steps {
-        git branch: 'master', url: 'https://github.com/hieulw/go-webapp-sample.git'
+        git branch: 'master', url: GIT_URL
       }
     }
 
     stage('Golang CI Lint') {
       steps {
         withEnv(["PATH+=${GOLINT}/bin"]) {
-          sh 'golangci-lint run --config=.github/.golangci.yml'
+          sh 'golangci-lint -v run --config=.github/.golangci.yml'
         }
       }
     }
 
     stage('Test Coverage') {
       steps {
-        sh 'go test ./controller ./model/dto ./service ./util -coverprofile=coverage.out'
+        sh 'go test -v ./controller ./model/dto ./service ./util -coverprofile=coverage.out'
         sh 'go tool cover -func=coverage.out'
       }
     }

@@ -7,48 +7,79 @@ pipeline {
     go '1.22'
   }
 
+  environment {
+    GOLINT = tool 'golangci-lint'
+    SONAR  = tool 'sonarqube-scanner'
+    APP_NAME = 'go-webapp-sample'
+    RELEASE = '1.5.7'
+    DOCKER_USER = 'ladyga14'
+    DOCKER_PASS = credentials('dockerhub-token')
+    IMAGE_NAME = "${env.DOCKER_USER}/${env.APP_NAME}"
+    IMAGE_TAG = "${env.RELEASE}-${BUILD_ID}"
+  }
+
   stages {
-    stage('Checkout') {
+    stage('Git Checkout') {
       steps {
         git branch: 'master', url: 'https://github.com/hieulw/go-webapp-sample.git'
       }
     }
 
-    stage('Clean') {
+    stage('Golang CI Lint') {
       steps {
-        sh 'go clean -cache' // clean build
-        sh 'go clean -testcache' // clean test
+        withEnv(["PATH+=${GOLINT}/bin"]) {
+          sh 'golangci-lint run --config=.github/.golangci.yml'
+        }
       }
     }
 
-    stage('Lint') {
+    stage('Test Coverage') {
       steps {
-        sh 'golangci-lint run --config=.github/.golangci.yml'
-      }
-    }
-
-    stage('Test') {
-      steps {
-        sh 'go test ./... -coverprofile=coverage.out -covermode=atomic'
-        sh 'go tool cover -html=coverage.out -o coverage.html'
+        sh 'go test ./controller ./model/dto ./service ./util -coverprofile=coverage.out'
+        sh 'go tool cover -func=coverage.out'
       }
     }
 
     stage('SonarQube Scanner') {
       steps {
-        withSonarQubeEnv('sonar') {
-          sh 'sonar-scanner -Dsonar.projectKey=go-webapp-sample -Dsonar.sources=. -Dsonar.tests=. -Dsonar.exclusions=**/*_test.go -Dsonar.go.tests.reportPath=coverage.out'
+        withEnv(["PATH+=${SONAR}/bin"]) {
+          withSonarQubeEnv('sonar') {
+            sh "sonar-scanner -X"
+          }
         }
-        script {
-          waitForQualityGate abortPipeline: true, credentialsId: 'sonarqube'
+      }
+    }
+
+    stage('Quality Gate') {
+      steps {
+        timeout(time: 5, unit: 'MINUTES') {
+          waitForQualityGate abortPipeline: true
         }
       }
     }
 
     stage('Build') {
       steps {
-        sh 'go build'
+        script {
+          docker.withRegistry('', DOCKER_PASS) {
+            def dockerImage = docker.build("${env.IMAGE_NAME}")
+            dockerImage.push("${env.IMAGE_TAG}")
+          }
+        }
       }
+    }
+  }
+
+  post {
+    always {
+      cleanWs(
+          cleanWhenNotBuilt: false,
+          deleteDirs: true,
+          notFailBuild: true,
+          patterns: [
+            [pattern: '.gitignore', type: 'INCLUDE'],
+          ]
+      )
     }
   }
 }

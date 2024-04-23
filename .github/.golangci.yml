@@ -25,7 +25,6 @@ linters-settings:
   gofmt:
     simplify: true
   govet:
-    check-shadowing: true
     settings:
       printf:
         funcs:
@@ -76,17 +75,6 @@ linters:
   enable:
     # default
     # ref: https://golangci-lint.run/usage/linters/
-    #- deadcode
-    #- errcheck
-    #- gosimple
-    #- govet
-    #- ineffassign
-    #- staticcheck
-    #- structcheck
-    #- typecheck
-    #- unused
-    #- varcheck
-    # add
     - dupl
     - errcheck
     - funlen
@@ -105,8 +93,3 @@ linters:
     - unconvert
     - unparam
     - revive
-
-# https://github.com/golangci/golangci/wiki/Configuration
-# latest version: https://github.com/golangci/golangci-lint
-service:
-  golangci-lint-version: 1.51.2

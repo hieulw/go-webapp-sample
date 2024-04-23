@@ -52,7 +52,8 @@ func (controller *accountController) GetLoginStatus(c echo.Context) error {
 // @Tags Auth
 // @Accept  json
 // @Produce  json
-// @Success 200 {object} model.Account "Success to fetch the account data. If the security function is disable, it returns the dummy data."
+// @Success 200 {object} model.Account "Success to fetch the account data.
+// If the security function is disable, it returns the dummy data."
 // @Failure 401 {boolean} bool "The current user haven't logged-in yet. Returns false."
 // @Router /auth/loginAccount [get]
 func (controller *accountController) GetLoginAccount(c echo.Context) error {

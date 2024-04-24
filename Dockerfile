@@ -2,10 +2,7 @@ FROM golang:1.22.0-alpine as build
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY **/**.go ./
+COPY . ./
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o /go-webapp-sample
 

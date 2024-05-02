@@ -15,8 +15,6 @@ pipeline {
     RELEASE = '1.5.7'
     DOCKER_USER = 'ladyga14'
     DOCKER_PASS = 'dockerhub-token'
-    IMAGE_NAME = "${env.DOCKER_USER}/${env.APP_NAME}"
-    IMAGE_TAG = "${env.RELEASE}-${BUILD_ID}"
   }
 
   stages {
@@ -63,8 +61,8 @@ pipeline {
       steps {
         script {
           docker.withRegistry('', DOCKER_PASS) {
-            def dockerImage = docker.build("${env.IMAGE_NAME}")
-            dockerImage.push("${env.IMAGE_TAG}")
+            def dockerImage = docker.build("${env.DOCKER_USER}/${env.APP_NAME}")
+            dockerImage.push("${env.RELEASE}")
           }
         }
       }

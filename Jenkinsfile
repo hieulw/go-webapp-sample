@@ -43,7 +43,7 @@ pipeline {
       steps {
         withEnv(["PATH+=${SONAR}/bin"]) {
           withSonarQubeEnv('sonar') {
-            sh "sonar-scanner -X"
+            sh 'sonar-scanner -X'
           }
         }
       }
